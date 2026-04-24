@@ -8,6 +8,28 @@ This repository is linked to a [v0](https://v0.app) project. You can continue de
 
 [Continue working on v0 →](https://v0.app/chat/projects/prj_KMgSsNACAFTOpS2jIz0AoDrWdBwo)
 
+## GitHub Pages deployment
+
+This project is configured for GitHub Pages static hosting.
+
+### 1. Enable Pages on GitHub
+
+1. Open repository **Settings** → **Pages**.
+2. In **Build and deployment**, select **GitHub Actions**.
+
+### 2. Deployment trigger
+
+- The workflow `.github/workflows/deploy-pages.yml` runs on push to `main`.
+- It builds the Next.js static export and deploys the `out` directory to Pages.
+
+### 3. URL
+
+If your repository name is `v0-penguin-day-website`, your site URL will be:
+
+`https://<your-github-username>.github.io/v0-penguin-day-website/`
+
+`next.config.mjs` automatically sets `basePath` and `assetPrefix` on GitHub Actions from `GITHUB_REPOSITORY`, so assets resolve correctly on Pages.
+
 ## Getting Started
 
 First, run the development server:
