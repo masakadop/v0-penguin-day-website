@@ -4,6 +4,12 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+    inputs:
+      enable_step_debug:
+        description: "Enable ACTIONS_STEP_DEBUG for manual runs"
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: pages
@@ -14,6 +20,8 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
+    env:
+      ACTIONS_STEP_DEBUG: ${{ github.event_name == 'workflow_dispatch' && inputs.enable_step_debug && 'true' || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,6 +56,15 @@ jobs:
         with:
           path: out
 
+      - name: Upload debug build artifact on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-build-debug-out
+          path: out
+          if-no-files-found: warn
+          retention-days: 7
+
   deploy:
     permissions:
       pages: write
@@ -58,6 +75,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     needs: build
     runs-on: ubuntu-latest
+    env:
+      ACTIONS_STEP_DEBUG: ${{ github.event_name == 'workflow_dispatch' && inputs.enable_step_debug && 'true' || 'false' }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
