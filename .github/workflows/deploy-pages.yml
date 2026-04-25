@@ -26,7 +26,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Next.js 16 build is validated on Node 20 in this repo.
+          # Pinning to LTS avoids CI-only breakage from Node 22 runtime differences.
+          node-version: 20
           cache: pnpm
 
       - name: Install dependencies
