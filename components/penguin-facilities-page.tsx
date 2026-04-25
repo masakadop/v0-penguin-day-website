@@ -42,6 +42,9 @@ export default function PenguinFacilitiesPage({
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedRegion, setSelectedRegion] = useState<Region | "all">(initialRegion)
   const [selectedType, setSelectedType] = useState<"all" | "aquarium" | "zoo">("all")
+  const [mapFocusMode, setMapFocusMode] = useState<"region" | "facility">(() =>
+    initialFacility ? "facility" : "region",
+  )
   const [selectedFacility, setSelectedFacility] = useState<PenguinFacility | null>(() => {
     if (!initialFacility) {
       return null
@@ -113,6 +116,7 @@ export default function PenguinFacilitiesPage({
 
       setSelectedRegion(nextRegion)
       setSelectedFacility(normalizedFacility)
+      setMapFocusMode(normalizedFacility ? "facility" : "region")
     }
 
     syncSelectedFromUrl()
@@ -122,6 +126,7 @@ export default function PenguinFacilitiesPage({
 
   const handleRegionSelect = (region: Region | "all") => {
     setSelectedRegion(region)
+    setMapFocusMode("region")
 
     if (region !== "all" && selectedFacility && selectedFacility.region !== region) {
       setSelectedFacility(null)
@@ -134,6 +139,7 @@ export default function PenguinFacilitiesPage({
 
   const handleFacilitySelect = (facility: PenguinFacility) => {
     setSelectedFacility(facility)
+    setMapFocusMode("facility")
     updateQuery(selectedRegion, facility.id)
 
     if (viewMode === "list") {
@@ -263,6 +269,7 @@ export default function PenguinFacilitiesPage({
                 facilities={filteredFacilities}
                 selectedFacility={selectedFacility}
                 selectedRegion={selectedRegion}
+                mapFocusMode={mapFocusMode}
                 onFacilitySelect={handleFacilitySelect}
               />
             </div>
