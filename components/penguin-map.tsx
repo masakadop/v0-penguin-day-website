@@ -33,17 +33,17 @@ function MapController({
 }) {
   const map = useMap()
 
-  const regionalFacilities = useMemo(() => {
+  const focusedFacilities = useMemo(() => {
     if (selectedRegion === "all") {
-      return []
+      return facilities
     }
 
     return facilities.filter((facility) => facility.region === selectedRegion)
   }, [facilities, selectedRegion])
 
   useEffect(() => {
-    if (regionalFacilities.length > 0) {
-      const bounds = L.latLngBounds(regionalFacilities.map((facility) => [facility.lat, facility.lng]))
+    if (focusedFacilities.length > 0) {
+      const bounds = L.latLngBounds(focusedFacilities.map((facility) => [facility.lat, facility.lng]))
       map.flyToBounds(bounds.pad(0.35), {
         duration: 1,
         maxZoom: 8,
@@ -69,7 +69,7 @@ function MapController({
         marker.openPopup()
       }
     }
-  }, [map, markerRefs, regionalFacilities, selectedFacility, selectedRegion])
+  }, [focusedFacilities, map, markerRefs, selectedFacility, selectedRegion])
 
   return null
 }
