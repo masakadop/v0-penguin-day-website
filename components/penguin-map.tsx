@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useRef, useState, type MutableRefObject } from "react"
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import type { PenguinFacility } from "@/lib/penguin-facilities"
+import type { PenguinFacility, Region } from "@/lib/penguin-facilities"
 
-// Custom penguin marker icon
 const createIcon = (type: "aquarium" | "zoo") => {
   return L.divIcon({
     className: "custom-marker",
@@ -22,15 +21,44 @@ const createIcon = (type: "aquarium" | "zoo") => {
 }
 
 function MapController({
+  facilities,
   selectedFacility,
+  selectedRegion,
   markerRefs,
 }: {
+  facilities: PenguinFacility[]
   selectedFacility: PenguinFacility | null
+  selectedRegion: Region | "all"
   markerRefs: MutableRefObject<Record<string, L.Marker | null>>
 }) {
   const map = useMap()
 
+  const regionalFacilities = useMemo(() => {
+    if (selectedRegion === "all") {
+      return []
+    }
+
+    return facilities.filter((facility) => facility.region === selectedRegion)
+  }, [facilities, selectedRegion])
+
   useEffect(() => {
+    if (regionalFacilities.length > 0) {
+      const bounds = L.latLngBounds(regionalFacilities.map((facility) => [facility.lat, facility.lng]))
+      map.flyToBounds(bounds.pad(0.35), {
+        duration: 1,
+        maxZoom: 8,
+      })
+
+      if (selectedFacility && selectedFacility.region === selectedRegion) {
+        const marker = markerRefs.current[selectedFacility.id]
+        if (marker) {
+          window.setTimeout(() => marker.openPopup(), 150)
+        }
+      }
+
+      return
+    }
+
     if (selectedFacility) {
       map.flyTo([selectedFacility.lat, selectedFacility.lng], 12, {
         duration: 1,
@@ -41,7 +69,7 @@ function MapController({
         marker.openPopup()
       }
     }
-  }, [selectedFacility, map, markerRefs])
+  }, [map, markerRefs, regionalFacilities, selectedFacility, selectedRegion])
 
   return null
 }
@@ -49,10 +77,16 @@ function MapController({
 interface PenguinMapProps {
   facilities: PenguinFacility[]
   selectedFacility: PenguinFacility | null
+  selectedRegion: Region | "all"
   onFacilitySelect: (facility: PenguinFacility) => void
 }
 
-export default function PenguinMap({ facilities, selectedFacility, onFacilitySelect }: PenguinMapProps) {
+export default function PenguinMap({
+  facilities,
+  selectedFacility,
+  selectedRegion,
+  onFacilitySelect,
+}: PenguinMapProps) {
   const [isMounted, setIsMounted] = useState(false)
   const markerRefs = useRef<Record<string, L.Marker | null>>({})
 
@@ -79,7 +113,12 @@ export default function PenguinMap({ facilities, selectedFacility, onFacilitySel
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <MapController selectedFacility={selectedFacility} markerRefs={markerRefs} />
+      <MapController
+        facilities={facilities}
+        selectedFacility={selectedFacility}
+        selectedRegion={selectedRegion}
+        markerRefs={markerRefs}
+      />
       {facilities.map((facility) => (
         <Marker
           key={facility.id}
@@ -96,9 +135,7 @@ export default function PenguinMap({ facilities, selectedFacility, onFacilitySel
             <div className="p-1">
               <h3 className="font-bold text-sm">{facility.name}</h3>
               <p className="text-xs text-gray-600 mt-1">{facility.prefecture}</p>
-              <p className="text-xs mt-1">
-                {facility.type === "aquarium" ? "水族館" : "動物園"}
-              </p>
+              <p className="text-xs mt-1">{facility.type === "aquarium" ? "水族館" : "動物園"}</p>
               <div className="mt-2">
                 <p className="text-xs font-medium">ペンギンの種類:</p>
                 <p className="text-xs text-gray-600">{facility.penguinSpecies.join(", ")}</p>
