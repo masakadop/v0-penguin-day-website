@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState, type MutableRefObject } from "react"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
@@ -21,7 +21,13 @@ const createIcon = (type: "aquarium" | "zoo") => {
   })
 }
 
-function MapController({ selectedFacility }: { selectedFacility: PenguinFacility | null }) {
+function MapController({
+  selectedFacility,
+  markerRefs,
+}: {
+  selectedFacility: PenguinFacility | null
+  markerRefs: MutableRefObject<Record<string, L.Marker | null>>
+}) {
   const map = useMap()
 
   useEffect(() => {
@@ -29,8 +35,13 @@ function MapController({ selectedFacility }: { selectedFacility: PenguinFacility
       map.flyTo([selectedFacility.lat, selectedFacility.lng], 12, {
         duration: 1,
       })
+
+      const marker = markerRefs.current[selectedFacility.id]
+      if (marker) {
+        marker.openPopup()
+      }
     }
-  }, [selectedFacility, map])
+  }, [selectedFacility, map, markerRefs])
 
   return null
 }
@@ -43,6 +54,7 @@ interface PenguinMapProps {
 
 export default function PenguinMap({ facilities, selectedFacility, onFacilitySelect }: PenguinMapProps) {
   const [isMounted, setIsMounted] = useState(false)
+  const markerRefs = useRef<Record<string, L.Marker | null>>({})
 
   useEffect(() => {
     setIsMounted(true)
@@ -67,12 +79,15 @@ export default function PenguinMap({ facilities, selectedFacility, onFacilitySel
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <MapController selectedFacility={selectedFacility} />
+      <MapController selectedFacility={selectedFacility} markerRefs={markerRefs} />
       {facilities.map((facility) => (
         <Marker
           key={facility.id}
           position={[facility.lat, facility.lng]}
           icon={createIcon(facility.type)}
+          ref={(marker) => {
+            markerRefs.current[facility.id] = marker
+          }}
           eventHandlers={{
             click: () => onFacilitySelect(facility),
           }}
