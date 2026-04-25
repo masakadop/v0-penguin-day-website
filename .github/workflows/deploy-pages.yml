@@ -5,18 +5,14 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-permissions:
-  actions: write
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
   build:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -51,6 +47,10 @@ jobs:
           path: out
 
   deploy:
+    permissions:
+      pages: write
+      id-token: write
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
