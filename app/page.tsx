@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import dynamic from "next/dynamic"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -55,8 +55,43 @@ export default function PenguinFacilitiesPage() {
     return { total: facilities.length, aquariums, zoos }
   }, [facilities])
 
+  const updateFacilityQuery = useCallback(
+    (facilityId: string | null) => {
+      const currentUrl = new URL(window.location.href)
+      const params = new URLSearchParams(currentUrl.search)
+      if (facilityId) {
+        params.set("facility", facilityId)
+      } else {
+        params.delete("facility")
+      }
+
+      const query = params.toString()
+      const url = query ? `${currentUrl.pathname}?${query}` : currentUrl.pathname
+      window.history.replaceState(null, "", url)
+    },
+    [],
+  )
+
+  useEffect(() => {
+    const syncSelectedFacilityFromUrl = () => {
+      const facilityId = new URLSearchParams(window.location.search).get("facility")
+      if (!facilityId) {
+        setSelectedFacility(null)
+        return
+      }
+
+      const facility = facilities.find((item) => item.id === facilityId) ?? null
+      setSelectedFacility(facility)
+    }
+
+    syncSelectedFacilityFromUrl()
+    window.addEventListener("popstate", syncSelectedFacilityFromUrl)
+    return () => window.removeEventListener("popstate", syncSelectedFacilityFromUrl)
+  }, [facilities])
+
   const handleFacilitySelect = (facility: PenguinFacility) => {
     setSelectedFacility(facility)
+    updateFacilityQuery(facility.id)
     if (viewMode === "list") {
       setViewMode("map")
     }
