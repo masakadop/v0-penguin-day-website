@@ -24,11 +24,13 @@ function MapController({
   facilities,
   selectedFacility,
   selectedRegion,
+  mapFocusMode,
   markerRefs,
 }: {
   facilities: PenguinFacility[]
   selectedFacility: PenguinFacility | null
   selectedRegion: Region | "all"
+  mapFocusMode: "region" | "facility"
   markerRefs: MutableRefObject<Record<string, L.Marker | null>>
 }) {
   const map = useMap()
@@ -42,19 +44,25 @@ function MapController({
   }, [facilities, selectedRegion])
 
   useEffect(() => {
+    if (selectedFacility && mapFocusMode === "facility") {
+      map.flyTo([selectedFacility.lat, selectedFacility.lng], 10, {
+        duration: 1,
+      })
+
+      const marker = markerRefs.current[selectedFacility.id]
+      if (marker) {
+        window.setTimeout(() => marker.openPopup(), 150)
+      }
+
+      return
+    }
+
     if (focusedFacilities.length > 0) {
       const bounds = L.latLngBounds(focusedFacilities.map((facility) => [facility.lat, facility.lng]))
       map.flyToBounds(bounds.pad(0.35), {
         duration: 1,
         maxZoom: 8,
       })
-
-      if (selectedFacility && selectedFacility.region === selectedRegion) {
-        const marker = markerRefs.current[selectedFacility.id]
-        if (marker) {
-          window.setTimeout(() => marker.openPopup(), 150)
-        }
-      }
 
       return
     }
@@ -69,7 +77,7 @@ function MapController({
         marker.openPopup()
       }
     }
-  }, [focusedFacilities, map, markerRefs, selectedFacility, selectedRegion])
+  }, [focusedFacilities, map, mapFocusMode, markerRefs, selectedFacility, selectedRegion])
 
   return null
 }
@@ -78,6 +86,7 @@ interface PenguinMapProps {
   facilities: PenguinFacility[]
   selectedFacility: PenguinFacility | null
   selectedRegion: Region | "all"
+  mapFocusMode: "region" | "facility"
   onFacilitySelect: (facility: PenguinFacility) => void
 }
 
@@ -85,6 +94,7 @@ export default function PenguinMap({
   facilities,
   selectedFacility,
   selectedRegion,
+  mapFocusMode,
   onFacilitySelect,
 }: PenguinMapProps) {
   const [isMounted, setIsMounted] = useState(false)
@@ -117,6 +127,7 @@ export default function PenguinMap({
         facilities={facilities}
         selectedFacility={selectedFacility}
         selectedRegion={selectedRegion}
+        mapFocusMode={mapFocusMode}
         markerRefs={markerRefs}
       />
       {facilities.map((facility) => (
