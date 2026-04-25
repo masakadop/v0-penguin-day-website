@@ -30,15 +30,19 @@ If your repository name is `v0-penguin-day-website`, your site URL will be:
 
 `next.config.mjs` automatically sets `basePath` and `assetPrefix` on GitHub Actions from `GITHUB_REPOSITORY`, so assets resolve correctly on Pages.
 
+## Development environment
+
+- Node.js: **20.x** (`.nvmrc` is pinned to `20`)
+- pnpm: **10.x**
+
+Using the same major versions locally and in CI helps avoid GitHub Actions-only build failures.
+
 ## Getting Started
 
-First, run the development server:
+Install dependencies and run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
