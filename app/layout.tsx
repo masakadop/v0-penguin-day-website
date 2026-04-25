@@ -2,11 +2,22 @@ import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'
+const isGithubActions = process.env.GITHUB_ACTIONS === 'true'
+const repositoryOwner = process.env.GITHUB_REPOSITORY_OWNER
+const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1]
+const githubPagesUrl =
+  repositoryOwner && repositoryName
+    ? `https://${repositoryOwner}.github.io/${repositoryName}`
+    : undefined
+const vercelUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : undefined
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || githubPagesUrl || vercelUrl || 'https://example.com'
+const basePath = isGithubActions && repositoryName ? `/${repositoryName}` : ''
 const title = 'ペンギンに会える施設マップ | 世界ペンギンの日'
 const description =
   '全国の水族館・動物園でペンギンに会える施設の一覧と地図。世界ペンギンの日を記念して、お近くのペンギンスポットを探しましょう。'
-const ogImage = '/placeholder.jpg'
+const ogImage = `${basePath}/placeholder.jpg`
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -14,12 +25,12 @@ export const metadata: Metadata = {
   description,
   generator: 'v0.app',
   alternates: {
-    canonical: '/',
+    canonical: siteUrl,
   },
   openGraph: {
     title,
     description,
-    url: '/',
+    url: siteUrl,
     siteName: '世界ペンギンの日',
     locale: 'ja_JP',
     type: 'website',
